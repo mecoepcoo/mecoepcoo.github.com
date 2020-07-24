@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.jpg?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.ico?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.ico?v=7.4.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.4.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="简介vue-cli是一个非常好用的vue项目脚手架生成工具，当一个项目从开发环境上线到生产环境时，往往会遇到一些问题：为什么打包出来的文件有2Mb大？为什么页面上的资源加载非常缓慢？为什么有毫不相关的代码被打包到了同一个文件？本文主要针对vue-cli生成的项目，在打包过程中做一些优化。">
+<meta name="keywords" content="webpack,vue,打包,优化">
+<meta property="og:type" content="article">
+<meta property="og:title" content="vue项目打包优化指南">
+<meta property="og:url" content="http://blog.tianzhen.tech/2020/06/22/2020/vue项目打包优化指南/index.html">
+<meta property="og:site_name" content="天真小海螺">
+<meta property="og:description" content="简介vue-cli是一个非常好用的vue项目脚手架生成工具，当一个项目从开发环境上线到生产环境时，往往会遇到一些问题：为什么打包出来的文件有2Mb大？为什么页面上的资源加载非常缓慢？为什么有毫不相关的代码被打包到了同一个文件？本文主要针对vue-cli生成的项目，在打包过程中做一些优化。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://blog.tianzhen.tech/2020/06/22/2020/vue项目打包优化指南/an.png">
+<meta property="og:updated_time" content="2020-06-22T23:55:00.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="vue项目打包优化指南">
+<meta name="twitter:description" content="简介vue-cli是一个非常好用的vue项目脚手架生成工具，当一个项目从开发环境上线到生产环境时，往往会遇到一些问题：为什么打包出来的文件有2Mb大？为什么页面上的资源加载非常缓慢？为什么有毫不相关的代码被打包到了同一个文件？本文主要针对vue-cli生成的项目，在打包过程中做一些优化。">
+<meta name="twitter:image" content="http://blog.tianzhen.tech/2020/06/22/2020/vue项目打包优化指南/an.png">
+  <link rel="alternate" href="/atom.xml" title="天真小海螺" type="application/atom+xml">
+  <link rel="canonical" href="http://blog.tianzhen.tech/2020/06/22/2020/vue项目打包优化指南/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>vue项目打包优化指南 | 天真小海螺</title>
+  <meta name="generator" content="Hexo 3.9.0">
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">天真小海螺</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">心者，栖神之舍；神者，知识之本；思者，神识之妙用也。</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档<span class="badge">22</span></a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类<span class="badge">11</span></a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签<span class="badge">30</span></a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a href="javascript:;" class="popup-trigger">
+        
+          <i class="menu-item-icon fa fa-search fa-fw"></i> <br>搜索</a>
+      </li>
+    
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/mecoepcoo" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://blog.tianzhen.tech/2020/06/22/2020/vue项目打包优化指南/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="天真小兮兮">
+      <meta itemprop="description" content="有问必答不知道">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天真小海螺">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">vue项目打包优化指南
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2020-06-22 23:55:00" itemprop="dateCreated datePublished" datetime="2020-06-22T23:55:00+00:00">2020-06-22</time>
+            </span>
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Vue/" itemprop="url" rel="index"><span itemprop="name">Vue</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">本文字数：</span>
+              
+              <span>14k</span>
+            </span>
+          
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              
+              <span>13 分钟</span>
+            </span>
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><p>vue-cli是一个非常好用的vue项目脚手架生成工具，当一个项目从开发环境上线到生产环境时，往往会遇到一些问题：为什么打包出来的文件有2Mb大？为什么页面上的资源加载非常缓慢？为什么有毫不相关的代码被打包到了同一个文件？本文主要针对vue-cli生成的项目，在打包过程中做一些优化。</p>
+<a id="more"></a>
+
+<p>本文发布时vue-cli的版本为v4。</p>
+<h1 id="按需加载路由"><a href="#按需加载路由" class="headerlink" title="按需加载路由"></a>按需加载路由</h1><p>如果不做额外的配置，当打开项目的首页时，项目就会同时加载许多与当前页面无关的代码，这影响了我们的首页加载速度，按需加载的路由（懒加载）可以解决这个问题。我们让webpack自动识别，把不同的路由组件打包成分开的文件。</p>
+<p>得益于vue-cli的封装，我们只需要这样写路由就可以实现按需加载的路由：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> routes = [</span><br><span class="line">  &#123;</span><br><span class="line">    path: <span class="string">''</span>,</span><br><span class="line">    redirect: <span class="string">'/home'</span>,</span><br><span class="line">  &#125;,</span><br><span class="line">  &#123;</span><br><span class="line">    path: <span class="string">'/home'</span>,</span><br><span class="line">    name: <span class="string">'home'</span>,</span><br><span class="line">    component: <span class="function"><span class="params">()</span> =&gt;</span> <span class="keyword">import</span>(<span class="string">'@/views/home'</span>),</span><br><span class="line">    meta: &#123; <span class="attr">title</span>: <span class="string">'首页'</span> &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  &#123;</span><br><span class="line">    path: <span class="string">'/about'</span>,</span><br><span class="line">    name: <span class="string">'about'</span>,</span><br><span class="line">    component: <span class="function"><span class="params">()</span> =&gt;</span> <span class="keyword">import</span>(<span class="string">'@/views/about'</span>),</span><br><span class="line">    meta: &#123; <span class="attr">title</span>: <span class="string">'关于'</span> &#125;</span><br><span class="line">  &#125;,</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+
+<h1 id="异步组件"><a href="#异步组件" class="headerlink" title="异步组件"></a>异步组件</h1><p>异步组件的原理跟按需加载路由类似，我们同样只需要以特定的方式书写代码：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> &#123;</span><br><span class="line">  name: <span class="string">'MyPage'</span>,</span><br><span class="line">  components: &#123;</span><br><span class="line">    test: <span class="function"><span class="params">()</span> =&gt;</span> <span class="keyword">import</span>(<span class="string">'./test'</span>) <span class="comment">// 异步引入组件，让webpack将代码分割打包</span></span><br><span class="line">  &#125;,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="分析工具"><a href="#分析工具" class="headerlink" title="分析工具"></a>分析工具</h1><p>要解决打包文件过大的问题，先要分析出到底是什么原因导致了文件大，哪些地方可以减小打包大小。</p>
+<p>vue-cli中内置了 <code>webpack-bundle-analyzer</code> 插件，默认情况下，我们修改 <code>package.json</code> 中的打包命令为 <code>npm run build --report</code> 即可查看可视化打包分析：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">"scripts"</span>: &#123;</span><br><span class="line">    <span class="attr">"build"</span>: <span class="string">"vue-cli-service build --report"</span>,</span><br><span class="line">  &#125;,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ npm run build</span><br></pre></td></tr></table></figure>
+
+<p>执行命令后将会在 <code>dist</code> 目录中多生成一个 <code>report.html</code> 文件，把它在浏览器中打开，即可看到分析：</p>
+<img src="/2020/06/22/2020/vue项目打包优化指南/an.png" title="pic">
+
+<p>从图中可以看出，moment这个库占据了大量无用的空间。借助这个工具，我们可以分析是哪些文件占用了空间。</p>
+<h1 id="按需打包Moment-js"><a href="#按需打包Moment-js" class="headerlink" title="按需打包Moment.js"></a>按需打包Moment.js</h1><p><code>moment.js</code> 占用空间大的原因在于，moment中包含了大量语言资源文件，我们并不需要这些。</p>
+<p>通过webpack自身的功能即可在打包时丢弃这些无用的内容：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 在项目根目录新建 vue.config.js</span></span><br><span class="line"><span class="keyword">const</span> webpack = <span class="built_in">require</span>(<span class="string">'webpack'</span>)</span><br><span class="line"><span class="built_in">module</span>.exports = &#123;</span><br><span class="line">  configureWebpack: <span class="function"><span class="params">config</span> =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">const</span> plugins = [</span><br><span class="line">      <span class="comment">// 只保留中文语言资源</span></span><br><span class="line">      <span class="keyword">new</span> webpack.ContextReplacementPlugin(<span class="regexp">/moment[/\\]locale$/</span>, /zh-cn/),</span><br><span class="line">    ]</span><br><span class="line">  &#125;,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="按需打包lodash"><a href="#按需打包lodash" class="headerlink" title="按需打包lodash"></a>按需打包lodash</h1><p><code>lodash</code> 也是前端常用的一个工具库，有两种方案可以减小它的打包体积。</p>
+<p>首先我们这么写代码，然后选择下面任意一种方法完成优化：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; cloneDeep &#125; <span class="keyword">from</span> <span class="string">'lodash'</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> a = &#123; <span class="attr">k</span>: <span class="string">'v'</span> &#125;</span><br><span class="line"><span class="keyword">const</span> b = cloneDeep(a)</span><br></pre></td></tr></table></figure>
+
+<h2 id="使用lodash-es（推荐）"><a href="#使用lodash-es（推荐）" class="headerlink" title="使用lodash-es（推荐）"></a>使用lodash-es（推荐）</h2><p>如果使用es模块，那么可以直接安装 <code>lodash-es</code>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ npm i lodash-es</span><br></pre></td></tr></table></figure>
+
+<h2 id="lodash-webpack-plugin插件"><a href="#lodash-webpack-plugin插件" class="headerlink" title="lodash-webpack-plugin插件"></a>lodash-webpack-plugin插件</h2><p>也可以使用 <code>lodash-webpack-plugin</code> 插件，自动移除没有用到的lodash代码：</p>
+<blockquote>
+<p>注意：这个插件在使用 <code>find</code> 等方法时可能会删除一些必要的依赖，导致程序报错，解决方法是自己补全依赖，或者换用 <code>lodash-es</code></p>
+</blockquote>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// vue.config.js</span></span><br><span class="line"><span class="keyword">const</span> LodashWebpackPlugin = <span class="built_in">require</span>(<span class="string">'lodash-webpack-plugin'</span>)</span><br><span class="line"></span><br><span class="line"><span class="built_in">module</span>.exports = &#123;</span><br><span class="line">  configureWebpack: <span class="function"><span class="params">config</span> =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">const</span> plugins = [</span><br><span class="line">      <span class="comment">// 加入这条</span></span><br><span class="line">      <span class="keyword">new</span> LodashWebpackPlugin(),</span><br><span class="line">    ]</span><br><span class="line">  &#125;,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="压缩代码"><a href="#压缩代码" class="headerlink" title="压缩代码"></a>压缩代码</h1><p>新版本的vue-cli是自动压缩代码的，所以不需要额外的配置。如果使用旧版cli生成项目，可以查询 <a href="https://github.com/terser/terser" target="_blank" rel="noopener">terser</a> 相关的用法。</p>
+<blockquote>
+<p><code>uglifyify.js</code> 已经停止维护了，不要再使用这个库</p>
+</blockquote>
+<h1 id="生成gzip文件"><a href="#生成gzip文件" class="headerlink" title="生成gzip文件"></a>生成gzip文件</h1><p>nginx可以帮助我们将资源自动压缩为gzip文件，如果我们在打包时能够提供一份压缩好的gzip文件的话，传输会更快。</p>
+<p>这里使用 <code>compression-webpack-plugin</code> 插件：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ npm i -D compression-webpack-plugin</span><br></pre></td></tr></table></figure>
+
+<p>编辑webpack配置：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// vue.config.js</span></span><br><span class="line"><span class="keyword">const</span> CompressionWebpackPlugin = <span class="built_in">require</span>(<span class="string">'compression-webpack-plugin'</span>)</span><br><span class="line"><span class="keyword">const</span> productionGzipExtensions = [<span class="string">'js'</span>, <span class="string">'css'</span>]</span><br><span class="line"></span><br><span class="line"><span class="built_in">module</span>.exports = &#123;</span><br><span class="line">  configureWebpack: <span class="function"><span class="params">config</span> =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">const</span> plugins = [</span><br><span class="line">      <span class="keyword">new</span> CompressionWebpackPlugin(&#123;</span><br><span class="line">        filename: <span class="string">'[path].gz[query]'</span>,</span><br><span class="line">        algorithm: <span class="string">'gzip'</span>,</span><br><span class="line">        test: <span class="keyword">new</span> <span class="built_in">RegExp</span>(<span class="string">'\\.('</span> + productionGzipExtensions.join(<span class="string">'|'</span>) + <span class="string">')$'</span>),</span><br><span class="line">        threshold: <span class="number">10240</span>,</span><br><span class="line">        minRatio: <span class="number">0.8</span></span><br><span class="line">      &#125;),</span><br><span class="line">    ]</span><br><span class="line">    <span class="comment">// 仅在生产环境压缩，提高开发时的编译速度</span></span><br><span class="line">    <span class="keyword">if</span> (process.env.NODE_ENV === <span class="string">'production'</span>) &#123;</span><br><span class="line">      config.plugins = [...plugins, ...config.plugins]</span><br><span class="line">      config.optimization = &#123;</span><br><span class="line">        splitChunks: &#123;</span><br><span class="line">          cacheGroups: &#123;</span><br><span class="line">            <span class="comment">// 提取公共模块</span></span><br><span class="line">            commons: &#123;</span><br><span class="line">              chunks: <span class="string">'all'</span>,</span><br><span class="line">              minChunks: <span class="number">2</span>,</span><br><span class="line">              maxInitialRequests: <span class="number">5</span>,</span><br><span class="line">              minSize: <span class="number">0</span>,</span><br><span class="line">              name: <span class="string">'common'</span></span><br><span class="line">            &#125;</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;,</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>注意：gzip还需要服务端支持，一般在nginx上做配置</p>
+</blockquote>
+
+    </div>
+
+    
+    
+    
+        <div id="wechat_subscriber" style="display: block; padding: 10px 0; margin: 20px auto; width: 100%; text-align: center;">
+  <img id="wechat_subscriber_qcode" src="/images/qrcode_hailuo.jpg" alt="天真小兮兮 wechat" style="width: 200px; max-width: 100%;">
+  <div>扫描二维码关注我的订阅号“前端小海螺”</div>
+</div>
+
+      
+        
+      
+        <div id="reward-container">
+  <div></div>
+  <button id="reward-button" disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+        
+      
+      <div style="display: inline-block">
+        <img src="/images/wepay.jpg" alt="天真小兮兮 微信支付">
+        <p>微信支付</p>
+      </div>
+
+  </div>
+</div>
+
+      
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>天真小兮兮</li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://blog.tianzhen.tech/2020/06/22/2020/vue项目打包优化指南/" title="vue项目打包优化指南">http://blog.tianzhen.tech/2020/06/22/2020/vue项目打包优化指南/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" rel="noopener" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-ND</a> 许可协议。转载请注明出处！</li>
+</ul>
+</div>
+
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/webpack/" rel="tag"><i class="fa fa-tag"></i> webpack</a>
+            
+              <a href="/tags/vue/" rel="tag"><i class="fa fa-tag"></i> vue</a>
+            
+              <a href="/tags/打包/" rel="tag"><i class="fa fa-tag"></i> 打包</a>
+            
+              <a href="/tags/优化/" rel="tag"><i class="fa fa-tag"></i> 优化</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2020/03/22/2020/2020年的Array能玩什么花样/" rel="next" title="2020年的Array能玩什么花样">
+                  <i class="fa fa-chevron-left"></i> 2020年的Array能玩什么花样
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2020/07/05/2020/react+ts踩坑记0：前言/" rel="prev" title="react+ts踩坑记0：前言">
+                  react+ts踩坑记0：前言 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#简介"><span class="nav-number">1.</span> <span class="nav-text">简介</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#按需加载路由"><span class="nav-number">2.</span> <span class="nav-text">按需加载路由</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#异步组件"><span class="nav-number">3.</span> <span class="nav-text">异步组件</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#分析工具"><span class="nav-number">4.</span> <span class="nav-text">分析工具</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#按需打包Moment-js"><span class="nav-number">5.</span> <span class="nav-text">按需打包Moment.js</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#按需打包lodash"><span class="nav-number">6.</span> <span class="nav-text">按需打包lodash</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#使用lodash-es（推荐）"><span class="nav-number">6.1.</span> <span class="nav-text">使用lodash-es（推荐）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#lodash-webpack-plugin插件"><span class="nav-number">6.2.</span> <span class="nav-text">lodash-webpack-plugin插件</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#压缩代码"><span class="nav-number">7.</span> <span class="nav-text">压缩代码</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#生成gzip文件"><span class="nav-number">8.</span> <span class="nav-text">生成gzip文件</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/images/avatar.jpg"
+      alt="天真小兮兮">
+  <p class="site-author-name" itemprop="name">天真小兮兮</p>
+  <div class="site-description" itemprop="description">有问必答不知道</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">22</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+      
+        
+      
+        <a href="https://github.com/mecoepcoo" title="GitHub &rarr; https://github.com/mecoepcoo" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+      
+        
+      
+        <a href="mailto:mecoepcoo@vip.qq.com" title="E-Mail &rarr; mailto:mecoepcoo@vip.qq.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+      
+        
+      
+        <a href="https://segmentfault.com/blog/tianzhen" title="Segmentfault &rarr; https://segmentfault.com/blog/tianzhen" rel="noopener" target="_blank"><i class="fa fa-fw fa-stack-exchange"></i></a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+      
+        
+      
+        <a href="https://www.jianshu.com/c/f68c813d762d" title="Jianshu &rarr; https://www.jianshu.com/c/f68c813d762d" rel="noopener" target="_blank"><i class="fa fa-fw fa-book"></i></a>
+      </span>
+    
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">天真小兮兮</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    
+    <span title="站点总字数">254k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    
+    <span title="站点阅读时长">3:51</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+
+
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/pisces.js?v=7.4.0"></script>
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+  <script src="/js/local-search.js?v=7.4.0"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.jpg?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.ico?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.ico?v=7.4.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.4.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="完善webpack打包配置有了webpack的基础配置，还不足以支持打生产环境能够使用的包，我们还需要增加一些配置。 首先，每次打包前最好能把上一次生成的文件删除，这里可以用clean-webpack-plugin插件实现： 1$ npm i -D clean-webpack-plugin  然后修改webpack基础配置： 12345678// webpack.base.jsconst &amp;#12">
+<meta name="keywords" content="工程化,react,webpack,typescript,eslint">
+<meta property="og:type" content="article">
+<meta property="og:title" content="从零搭建webpack4+react+typescript+eslint脚手架(二)">
+<meta property="og:url" content="http://blog.tianzhen.tech/2019/10/02/2019/从零搭建webpack4+react+typescript+eslint脚手架(二)/index.html">
+<meta property="og:site_name" content="天真小海螺">
+<meta property="og:description" content="完善webpack打包配置有了webpack的基础配置，还不足以支持打生产环境能够使用的包，我们还需要增加一些配置。 首先，每次打包前最好能把上一次生成的文件删除，这里可以用clean-webpack-plugin插件实现： 1$ npm i -D clean-webpack-plugin  然后修改webpack基础配置： 12345678// webpack.base.jsconst &amp;#12">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-10-02T09:34:00.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="从零搭建webpack4+react+typescript+eslint脚手架(二)">
+<meta name="twitter:description" content="完善webpack打包配置有了webpack的基础配置，还不足以支持打生产环境能够使用的包，我们还需要增加一些配置。 首先，每次打包前最好能把上一次生成的文件删除，这里可以用clean-webpack-plugin插件实现： 1$ npm i -D clean-webpack-plugin  然后修改webpack基础配置： 12345678// webpack.base.jsconst &amp;#12">
+  <link rel="alternate" href="/atom.xml" title="天真小海螺" type="application/atom+xml">
+  <link rel="canonical" href="http://blog.tianzhen.tech/2019/10/02/2019/从零搭建webpack4+react+typescript+eslint脚手架(二)/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>从零搭建webpack4+react+typescript+eslint脚手架(二) | 天真小海螺</title>
+  <meta name="generator" content="Hexo 3.9.0">
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">天真小海螺</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">心者，栖神之舍；神者，知识之本；思者，神识之妙用也。</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档<span class="badge">22</span></a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类<span class="badge">11</span></a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签<span class="badge">30</span></a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a href="javascript:;" class="popup-trigger">
+        
+          <i class="menu-item-icon fa fa-search fa-fw"></i> <br>搜索</a>
+      </li>
+    
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/mecoepcoo" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://blog.tianzhen.tech/2019/10/02/2019/从零搭建webpack4+react+typescript+eslint脚手架(二)/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="天真小兮兮">
+      <meta itemprop="description" content="有问必答不知道">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天真小海螺">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">从零搭建webpack4+react+typescript+eslint脚手架(二)
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2019-10-02 09:34:00" itemprop="dateCreated datePublished" datetime="2019-10-02T09:34:00+00:00">2019-10-02</time>
+            </span>
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/从零搭建webpack4-react-typescript-eslint脚手架/" itemprop="url" rel="index"><span itemprop="name">从零搭建webpack4+react+typescript+eslint脚手架</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">本文字数：</span>
+              
+              <span>24k</span>
+            </span>
+          
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              
+              <span>22 分钟</span>
+            </span>
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="完善webpack打包配置"><a href="#完善webpack打包配置" class="headerlink" title="完善webpack打包配置"></a>完善webpack打包配置</h1><p>有了webpack的基础配置，还不足以支持打生产环境能够使用的包，我们还需要增加一些配置。</p>
+<p>首先，每次打包前最好能把上一次生成的文件删除，这里可以用<a href="https://github.com/johnagan/clean-webpack-plugin" target="_blank" rel="noopener">clean-webpack-plugin</a>插件实现：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ npm i -D clean-webpack-plugin</span><br></pre></td></tr></table></figure>
+
+<p>然后修改webpack基础配置：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// webpack.base.js</span></span><br><span class="line"><span class="keyword">const</span> &#123; CleanWebpackPlugin &#125; = <span class="built_in">require</span>(<span class="string">'clean-webpack-plugin'</span>);</span><br><span class="line"></span><br><span class="line"><span class="built_in">module</span>.exports = &#123;</span><br><span class="line">  plugins: [</span><br><span class="line">    <span class="keyword">new</span> CleanWebpackPlugin(),</span><br><span class="line">  ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在生产环境，我们希望部署新版本后能够丢弃缓存，又希望保留没有被改动的文件的缓存，而在开发环境，我们希望完全不使用缓存，因此我们需要在当前配置的基础上，分别扩展生产和开发两套配置。</p>
+<a id="more"></a>
+
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// webpack.prod.js 生产环境打包配置</span></span><br><span class="line"><span class="keyword">const</span> merge = <span class="built_in">require</span>(<span class="string">'webpack-merge'</span>);</span><br><span class="line"><span class="keyword">const</span> baseWebpackConfig = <span class="built_in">require</span>(<span class="string">'./webpack.base'</span>);</span><br><span class="line"><span class="keyword">const</span> &#123; CleanWebpackPlugin &#125; = <span class="built_in">require</span>(<span class="string">'clean-webpack-plugin'</span>);</span><br><span class="line"></span><br><span class="line"><span class="built_in">module</span>.exports = merge.smart(baseWebpackConfig, &#123;</span><br><span class="line">  mode: <span class="string">'production'</span>,</span><br><span class="line">  devtool: sourceMapsMode,</span><br><span class="line">  output: &#123;</span><br><span class="line">    filename: <span class="string">'js/[name].[contenthash:8].js'</span>, <span class="comment">// contenthash：只有模块的内容改变，才会改变hash值</span></span><br><span class="line">  &#125;,</span><br><span class="line">  plugins: [</span><br><span class="line">    <span class="keyword">new</span> CleanWebpackPlugin(),</span><br><span class="line">  ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// webpack.dev.js 开发环境的配置</span></span><br><span class="line"><span class="keyword">const</span> merge = <span class="built_in">require</span>(<span class="string">'webpack-merge'</span>);</span><br><span class="line"><span class="keyword">const</span> baseWebpackConfig = <span class="built_in">require</span>(<span class="string">'./webpack.base'</span>);</span><br><span class="line"><span class="keyword">const</span> config = <span class="built_in">require</span>(<span class="string">'./config'</span>);</span><br><span class="line"></span><br><span class="line"><span class="built_in">module</span>.exports = merge.smart(baseWebpackConfig, &#123;</span><br><span class="line">  mode: <span class="string">'development'</span>,</span><br><span class="line">  output: &#123;</span><br><span class="line">    filename: <span class="string">'js/[name].[hash:8].js'</span>,</span><br><span class="line">    publicPath: config.publicPath <span class="comment">// 这里可以省略</span></span><br><span class="line">  &#125;,</span><br><span class="line">  <span class="built_in">module</span>: &#123;</span><br><span class="line">    rules: [</span><br><span class="line">      &#123;</span><br><span class="line">        oneOf: []</span><br><span class="line">      &#125;</span><br><span class="line">    ]</span><br><span class="line">  &#125;,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>接下来我们编辑<code>build.js</code>，让打包程序真正能够运行起来：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// config/build.js</span></span><br><span class="line"><span class="keyword">const</span> webpack = <span class="built_in">require</span>(<span class="string">'webpack'</span>);</span><br><span class="line"><span class="keyword">const</span> webpackConfig = <span class="built_in">require</span>(<span class="string">'./webpack.prod'</span>);</span><br><span class="line"></span><br><span class="line">webpack(webpackConfig, <span class="function"><span class="keyword">function</span> (<span class="params">err, stats</span>) </span>&#123;&#125;);</span><br></pre></td></tr></table></figure>
+
+<p>安装工具并添加启动命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ npm i -D cross-env</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">// package.json</span><br><span class="line">&#123;</span><br><span class="line">  <span class="attr">"scripts"</span>: &#123;</span><br><span class="line">    <span class="attr">"dev"</span>: <span class="string">"cross-env NODE_ENV=development webpack-dev-server --config ./config/webpack.dev.js"</span>,</span><br><span class="line">    <span class="attr">"build"</span>: <span class="string">"cross-env NODE_ENV=production node config/build.js"</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后运行打包命令，就能看到新生成的dist目录中有已经打包好的文件了：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ npm run build</span><br></pre></td></tr></table></figure>
+
+<h1 id="打包分析工具"><a href="#打包分析工具" class="headerlink" title="打包分析工具"></a>打包分析工具</h1><p>包是打出来了，但是打包好的文件构成是什么样呢，有没有按照我们的需要正确打包呢，我们需要一个分析工具来帮助判断，这就是<a href="https://github.com/webpack-contrib/webpack-bundle-analyzer" target="_blank" rel="noopener">webpack-bundle-analyzer</a>。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ npm i -D webpack-bundle-analyzer</span><br></pre></td></tr></table></figure>
+
+<p>我们希望根据打包的命令参数，在打包时自动生成或不生成分析报告。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// webpack.base.js</span></span><br><span class="line"><span class="keyword">const</span> argv = <span class="built_in">require</span>(<span class="string">'yargs'</span>).argv;</span><br><span class="line"><span class="keyword">const</span> BundleAnalyzerPlugin = <span class="built_in">require</span>(<span class="string">'webpack-bundle-analyzer'</span>).BundleAnalyzerPlugin;</span><br><span class="line"><span class="keyword">const</span> merge = <span class="built_in">require</span>(<span class="string">'webpack-merge'</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> bundleAnalyzerReport = argv.report; <span class="comment">// 根据命令参数是否含有 'report' 来决定是否生成报告</span></span><br><span class="line"><span class="comment">// 这个配置将合并到最后的配置中</span></span><br><span class="line"><span class="keyword">const</span> webpackConfig = &#123;</span><br><span class="line">  plugins: []</span><br><span class="line">&#125;;</span><br><span class="line"><span class="keyword">if</span> (bundleAnalyzerReport) &#123;</span><br><span class="line">  webpackConfig.plugins.push(<span class="keyword">new</span> BundleAnalyzerPlugin(&#123;</span><br><span class="line">    analyzerMode: <span class="string">'static'</span>,</span><br><span class="line">    openAnalyzer: <span class="literal">false</span>,</span><br><span class="line">    reportFilename: path.join(config.assetsRoot, <span class="string">'./report.html'</span>)</span><br><span class="line">  &#125;));</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 改用merge来合并配置</span></span><br><span class="line"><span class="built_in">module</span>.exports = merge(webpackConfig, &#123;</span><br><span class="line">  <span class="comment">// ...configs</span></span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<p>在<code>package.json</code>打包命令中增加参数：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">"scripts": &#123;</span><br><span class="line">  "build": "cross-env NODE_ENV=production node config/build.js --report"</span><br><span class="line">&#125;,</span><br></pre></td></tr></table></figure>
+
+<p>运行<code>npm run build</code>，生成的dist目录中会有一个report.html文件，就是我们的分析报告。</p>
+<h1 id="支持less和css-modules"><a href="#支持less和css-modules" class="headerlink" title="支持less和css modules"></a>支持less和css modules</h1><p>现在我们使脚手架支持css，less和css modules：</p>
+<p>先装工具：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ npm i -D style-loader css-loader less less-loader</span><br></pre></td></tr></table></figure>
+
+<p>增加配置：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// webpack.base.js</span></span><br><span class="line"><span class="built_in">module</span>: &#123;</span><br><span class="line">  rules: [</span><br><span class="line">    &#123;</span><br><span class="line">      oneOf: [</span><br><span class="line">        <span class="comment">// ... configs</span></span><br><span class="line">        &#123;</span><br><span class="line">          test: <span class="regexp">/\.(less|css)$/</span>,</span><br><span class="line">          use: [</span><br><span class="line">            &#123; <span class="attr">loader</span>: <span class="string">'style-loader'</span> &#125;,</span><br><span class="line">            &#123;</span><br><span class="line">              loader: <span class="string">'css-loader'</span>,</span><br><span class="line">              options: &#123;</span><br><span class="line">                modules: <span class="literal">false</span> <span class="comment">// 如果要启用css modules，改为true即可</span></span><br><span class="line">              &#125;</span><br><span class="line">            &#125;,</span><br><span class="line">            &#123;</span><br><span class="line">              loader: <span class="string">'less-loader'</span>,</span><br><span class="line">              options: &#123; <span class="attr">javascriptEnabled</span>: <span class="literal">true</span> &#125;</span><br><span class="line">            &#125;</span><br><span class="line">          ]</span><br><span class="line">        &#125;,</span><br><span class="line">      ]</span><br><span class="line">    &#125;</span><br><span class="line">  ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="提取css"><a href="#提取css" class="headerlink" title="提取css"></a>提取css</h1><p>我们发现打包好的文件中并没有css，但是css却可以正常工作，这是因为webpack并没有把样式从js中剥离出来。</p>
+<p>为了方便管理静态资源，充分利用缓存，我们需要将css单独打包。</p>
+<p>先安装工具：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ npm i -D optimize-css-assets-webpack-plugin</span><br></pre></td></tr></table></figure>
+
+<p>增加打包配置：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// webpack.prod.js</span></span><br><span class="line"><span class="keyword">const</span> OptimizeCSSAssetsPlugin = <span class="built_in">require</span>(<span class="string">'optimize-css-assets-webpack-plugin'</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// ...webpack configs</span></span><br><span class="line">optimization: &#123;</span><br><span class="line">  minimizer: [</span><br><span class="line">    <span class="keyword">new</span> OptimizeCSSAssetsPlugin(&#123;</span><br><span class="line">      cssProcessorOptions: <span class="literal">true</span> ? &#123; <span class="attr">map</span>: &#123; <span class="attr">inline</span>: <span class="literal">false</span> &#125;&#125; : &#123;&#125;</span><br><span class="line">    &#125;)</span><br><span class="line">  ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>运行打包命令，就能看到生成的css文件。</p>
+<h1 id="自动增加css前缀"><a href="#自动增加css前缀" class="headerlink" title="自动增加css前缀"></a>自动增加css前缀</h1><p>使用<a href="https://github.com/postcss/postcss" target="_blank" rel="noopener">postcss</a>，可以自动为css增加浏览器前缀。</p>
+<p>安装依赖：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ npm i -D postcss-loader autoprefixer</span><br></pre></td></tr></table></figure>
+
+<p>增加webpack配置：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// webpack.base.js，webpack.prod.js</span></span><br><span class="line">&#123;</span><br><span class="line">  test: <span class="regexp">/\.(less|css)$/</span>,</span><br><span class="line">  use: [</span><br><span class="line">    &#123; <span class="attr">loader</span>: <span class="string">'style-loader'</span> &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">      loader: <span class="string">'css-loader'</span>,</span><br><span class="line">      options: &#123;</span><br><span class="line">        modules: <span class="literal">false</span></span><br><span class="line">      &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="string">'postcss-loader'</span>, <span class="comment">// 注意插入的位置，webpack.prod.js也要加这一项！！！</span></span><br><span class="line">    &#123;</span><br><span class="line">      loader: <span class="string">'less-loader'</span>,</span><br><span class="line">      options: &#123; <span class="attr">javascriptEnabled</span>: <span class="literal">true</span> &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  ]</span><br><span class="line">&#125;,</span><br></pre></td></tr></table></figure>
+
+<p>在根目录新建<code>postcss.config.js</code>：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">module</span>.exports = &#123;</span><br><span class="line">  plugins: &#123;</span><br><span class="line">    autoprefixer: &#123;&#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>在<code>package.json</code>中增加配置：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">"browserslist": [</span><br><span class="line">  "&gt; 1%",</span><br><span class="line">  "last 2 versions",</span><br><span class="line">  "not ie &lt;= 8",</span><br><span class="line">  "iOS &gt;= 8",</span><br><span class="line">  "Firefox &gt;= 20",</span><br><span class="line">  <span class="string">"Android &gt; 4.4"</span></span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+
+<h1 id="postcss-px-to-viewport示例"><a href="#postcss-px-to-viewport示例" class="headerlink" title="postcss-px-to-viewport示例"></a>postcss-px-to-viewport示例</h1><p>这里提供一个利用postcss做基于vh，vw布局的配置例子。</p>
+<p>安装依赖：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ npm i -D postcss-aspect-ratio-mini postcss-px-to-viewport postcss-write-svg</span><br><span class="line">$ npm i -D cssnano cssnano-preset-advanced</span><br></pre></td></tr></table></figure>
+
+<p>修改<code>postcss.config.js</code>：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">module</span>.exports = &#123;</span><br><span class="line">  plugins: &#123;</span><br><span class="line">    <span class="string">'postcss-aspect-ratio-mini'</span>: &#123;&#125;, <span class="comment">// 处理元素容器的宽高比</span></span><br><span class="line">    <span class="string">'postcss-write-svg'</span>: &#123; <span class="comment">//处理1px边框</span></span><br><span class="line">      utf8: <span class="literal">false</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="string">'postcss-px-to-viewport'</span>: &#123;</span><br><span class="line">      viewportWidth: <span class="number">750</span>,</span><br><span class="line">      viewportHeight: <span class="number">1334</span>,</span><br><span class="line">      unitPrecision: <span class="number">3</span>,</span><br><span class="line">      viewportUnit: <span class="string">'vw'</span>,</span><br><span class="line">      selectorBlackList: [<span class="string">'.ignore'</span>, <span class="string">'.hairlines'</span>],</span><br><span class="line">      minPixelValue: <span class="number">1</span>,</span><br><span class="line">      mediaQuery: <span class="literal">false</span></span><br><span class="line">    &#125;,</span><br><span class="line">    cssnano: &#123;</span><br><span class="line">      <span class="string">'cssnano-preset-advanced'</span>: &#123;</span><br><span class="line">        zindex: <span class="literal">false</span>, <span class="comment">// 这里一定要关掉，否则所有的z-index会被设为1</span></span><br><span class="line">      &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    autoprefixer: &#123;&#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>配置完成后，如果是基于750px宽度设计图，那么设计图上1px就直接在样式中写1px即可，打包时会自动转为vw单位。</p>
+
+    </div>
+
+    
+    
+    
+        <div id="wechat_subscriber" style="display: block; padding: 10px 0; margin: 20px auto; width: 100%; text-align: center;">
+  <img id="wechat_subscriber_qcode" src="/images/qrcode_hailuo.jpg" alt="天真小兮兮 wechat" style="width: 200px; max-width: 100%;">
+  <div>扫描二维码关注我的订阅号“前端小海螺”</div>
+</div>
+
+      
+        
+      
+        <div id="reward-container">
+  <div></div>
+  <button id="reward-button" disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+        
+      
+      <div style="display: inline-block">
+        <img src="/images/wepay.jpg" alt="天真小兮兮 微信支付">
+        <p>微信支付</p>
+      </div>
+
+  </div>
+</div>
+
+      
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>天真小兮兮</li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://blog.tianzhen.tech/2019/10/02/2019/从零搭建webpack4+react+typescript+eslint脚手架(二)/" title="从零搭建webpack4+react+typescript+eslint脚手架(二)">http://blog.tianzhen.tech/2019/10/02/2019/从零搭建webpack4+react+typescript+eslint脚手架(二)/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" rel="noopener" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-ND</a> 许可协议。转载请注明出处！</li>
+</ul>
+</div>
+
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/工程化/" rel="tag"><i class="fa fa-tag"></i> 工程化</a>
+            
+              <a href="/tags/react/" rel="tag"><i class="fa fa-tag"></i> react</a>
+            
+              <a href="/tags/webpack/" rel="tag"><i class="fa fa-tag"></i> webpack</a>
+            
+              <a href="/tags/typescript/" rel="tag"><i class="fa fa-tag"></i> typescript</a>
+            
+              <a href="/tags/eslint/" rel="tag"><i class="fa fa-tag"></i> eslint</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2019/10/01/2019/从零搭建webpack4+react+typescript+eslint脚手架(一)/" rel="next" title="从零搭建webpack4+react+typescript+eslint脚手架(一)">
+                  <i class="fa fa-chevron-left"></i> 从零搭建webpack4+react+typescript+eslint脚手架(一)
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2019/10/03/2019/从零搭建webpack4+react+typescript+eslint脚手架(三)/" rel="prev" title="从零搭建webpack4+react+typescript+eslint脚手架(三)">
+                  从零搭建webpack4+react+typescript+eslint脚手架(三) <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#完善webpack打包配置"><span class="nav-number">1.</span> <span class="nav-text">完善webpack打包配置</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#打包分析工具"><span class="nav-number">2.</span> <span class="nav-text">打包分析工具</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#支持less和css-modules"><span class="nav-number">3.</span> <span class="nav-text">支持less和css modules</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#提取css"><span class="nav-number">4.</span> <span class="nav-text">提取css</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#自动增加css前缀"><span class="nav-number">5.</span> <span class="nav-text">自动增加css前缀</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#postcss-px-to-viewport示例"><span class="nav-number">6.</span> <span class="nav-text">postcss-px-to-viewport示例</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/images/avatar.jpg"
+      alt="天真小兮兮">
+  <p class="site-author-name" itemprop="name">天真小兮兮</p>
+  <div class="site-description" itemprop="description">有问必答不知道</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">22</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+      
+        
+      
+        <a href="https://github.com/mecoepcoo" title="GitHub &rarr; https://github.com/mecoepcoo" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+      
+        
+      
+        <a href="mailto:mecoepcoo@vip.qq.com" title="E-Mail &rarr; mailto:mecoepcoo@vip.qq.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+      
+        
+      
+        <a href="https://segmentfault.com/blog/tianzhen" title="Segmentfault &rarr; https://segmentfault.com/blog/tianzhen" rel="noopener" target="_blank"><i class="fa fa-fw fa-stack-exchange"></i></a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+      
+        
+      
+        <a href="https://www.jianshu.com/c/f68c813d762d" title="Jianshu &rarr; https://www.jianshu.com/c/f68c813d762d" rel="noopener" target="_blank"><i class="fa fa-fw fa-book"></i></a>
+      </span>
+    
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">天真小兮兮</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    
+    <span title="站点总字数">254k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    
+    <span title="站点阅读时长">3:51</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+
+
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/pisces.js?v=7.4.0"></script>
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+  <script src="/js/local-search.js?v=7.4.0"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+</body>
+</html>
